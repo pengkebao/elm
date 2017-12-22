@@ -123,7 +123,7 @@ type EventLogDetail struct {
 }
 
 type QueryOrderRes struct {
-	TransportStationId         int               `json:"transport_station_id"`
+	TransportStationId         string            `json:"transport_station_id"`
 	TransportStationTel        string            `json:"transport_station_tel"`
 	CarrierDriverId            int               `json:"carrier_driver_id"`
 	CarrierDriverName          string            `json:"carrier_driver_name"`
@@ -173,19 +173,8 @@ func NewComplaintOrder() *ComplaintOrder {
 	return &ComplaintOrder{}
 }
 
-func (this *ComplaintOrder) Query(v interface{}) (err error) {
+func (this *ComplaintOrder) Send() (err error) {
 	elm := new(ELM)
 	err = elm.complaintOrder(this)
-	if err != nil {
-		return nil
-	}
-	data, err := json.Marshal(elm.Data)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(data, v)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }

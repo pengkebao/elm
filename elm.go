@@ -60,12 +60,12 @@ func (this *ELM) getAccessToken() (string, error) {
 	if this.Code == "200" {
 		res := utils.ConvInterfaceToMap(this.Data)
 		if access_token, ok := res["access_token"]; ok {
-			expire_time, ok := res["expire_time"].(int64)
+			expire_time, ok := res["expire_time"].(float64)
 			if !ok {
-				return "", errors.New("It's not ok for type int64")
+				return "", errors.New("It's not ok for type float64")
 			}
 			Token.AccessToken = fmt.Sprintf("%s", access_token)
-			Token.ExpireTime = time.Now().Unix() + (expire_time / 1000)
+			Token.ExpireTime = int64(expire_time) / 1000
 			return fmt.Sprintf("%v", access_token), nil
 		}
 		return "", nil

@@ -27,8 +27,8 @@ chain_store_code	string	32	否	门店编码集合，JSON格式字符串（支持
 chain_store_name	string	32	是	门店名称集合，JSON格式字符串（后期废弃）
 */
 type QueryStore struct {
-	ChainStoreCode string `json:"chain_store_code"`
-	ChainStoreName string `json:"chain_store_name"`
+	ChainStoreCode []string `json:"chain_store_code"`
+	ChainStoreName []string `json:"chain_store_name"`
 }
 
 func NewQueryStore() *QueryStore {

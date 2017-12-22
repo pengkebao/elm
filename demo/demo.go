@@ -1,7 +1,6 @@
 package main
 
 import "github.com/pengkebao/elm"
-
 import "fmt"
 
 func main() {
@@ -87,13 +86,21 @@ func main() {
 	// createStore.ServiceCode = 1
 	// err = createStore.Send()
 	//查询门店
-	QueryStore := elm.NewQueryStore()
-	QueryStore.ChainStoreCode = append(QueryStore.ChainStoreCode, "A001")
-	QueryStore.ChainStoreName = append(QueryStore.ChainStoreCode, "饿了么BOD7")
-	var QueryStoreRes []elm.QueryStoreRes
-	err := QueryStore.Query(&QueryStoreRes)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(QueryStoreRes)
+	// QueryStore := elm.NewQueryStore()
+	// QueryStore.ChainStoreCode = append(QueryStore.ChainStoreCode, "A001")
+	// QueryStore.ChainStoreName = append(QueryStore.ChainStoreCode, "饿了么BOD7")
+	// var QueryStoreRes []elm.QueryStoreRes
+	// err := QueryStore.Query(&QueryStoreRes)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(QueryStoreRes)
+
+	//骑手位置
+	Carrier := new(elm.Carrier)
+	Carrier.PartnerOrderCode = "2922"
+	CarrierRes := new(elm.CarrierQueryRes)
+	err := Carrier.Query(CarrierRes)
+	fmt.Println(err)
+	fmt.Println(CarrierRes)
 }

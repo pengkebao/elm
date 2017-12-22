@@ -1,7 +1,6 @@
 package elm
 
 import (
-	"CloudShop/utils"
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
@@ -38,14 +37,14 @@ func NewElm() *ELM {
 	return &ELM{}
 }
 
-var Token struct {
+var token struct {
 	AccessToken string
 	ExpireTime  int64
 }
 
 func (this *ELM) getAccessToken() (string, error) {
-	if Token.ExpireTime > time.Now().Unix() {
-		return Token.AccessToken, nil
+	if token.ExpireTime > time.Now().Unix() {
+		return token.AccessToken, nil
 	}
 	data := make(map[string]interface{})
 	data["app_id"] = appId
@@ -58,14 +57,18 @@ func (this *ELM) getAccessToken() (string, error) {
 		return "", err
 	}
 	if this.Code == "200" {
-		res := utils.ConvInterfaceToMap(this.Data)
+		res := make(map[string]interface{})
+		v, ok := this.Data.(map[string]interface{})
+		if ok {
+			res = v
+		}
 		if access_token, ok := res["access_token"]; ok {
 			expire_time, ok := res["expire_time"].(float64)
 			if !ok {
 				return "", errors.New("It's not ok for type float64")
 			}
-			Token.AccessToken = fmt.Sprintf("%s", access_token)
-			Token.ExpireTime = int64(expire_time) / 1000
+			token.AccessToken = fmt.Sprintf("%s", access_token)
+			token.ExpireTime = int64(expire_time) / 1000
 			return fmt.Sprintf("%v", access_token), nil
 		}
 		return "", nil

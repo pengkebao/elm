@@ -100,6 +100,10 @@ longitude	long	定点次日达服务独有的字段: 微仓经度
 cancel_reason	int	订单取消原因. 1:用户取消, 2:商家取消
 error_code	string	错误编码
 */
+func NewNotify() *Notify {
+	return &Notify{}
+}
+
 func (this *Notify) Check(body []byte, v interface{}) (err error) {
 	err = json.Unmarshal(body, this)
 	if err != nil {

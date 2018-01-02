@@ -42,6 +42,20 @@ var token struct {
 	ExpireTime  int64
 }
 
+func (this *ELM) Init(appid string, secretkey string, exam bool) {
+	if exam == false {
+		apiUrl = "https://open-anubis.ele.me"
+	}
+	if len(appId) <= 0 {
+		fmt.Println("appId error")
+	}
+	if len(secretKey) <= 0 {
+		fmt.Println("secretKey error")
+	}
+	appId = appid
+	secretKey = secretkey
+}
+
 func (this *ELM) getAccessToken() (string, error) {
 	if token.ExpireTime > time.Now().Unix() {
 		return token.AccessToken, nil

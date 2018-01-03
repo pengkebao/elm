@@ -66,7 +66,7 @@ func (this *ELM) getAccessToken() (string, error) {
 	data["signature"] = this.creatAccessTokenSign(data)
 	hostUrl := apiUrl + "/anubis-webapi/get_access_token"
 	hostUrl = this.createRequestUrl(hostUrl, data)
-	err := this.httpGet(hostUrl, this)
+	err := this.httpGet(hostUrl)
 	if err != nil {
 		return "", err
 	}
@@ -172,7 +172,7 @@ func (this *ELM) Send(hostUrl string, info []byte) (err error) {
 	requestData["data"] = url.QueryEscape(string(info))
 	requestData["signature"] = signature
 	reqData, err := json.Marshal(requestData)
-	err = this.httpPost(hostUrl, reqData, this)
+	err = this.httpPost(hostUrl, reqData)
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func (this *ELM) creatSalt() int {
 	return 1000 + rand.Intn(9999-1000)
 }
 
-func (this *ELM) httpPost(url string, body []byte, response interface{}) error {
+func (this *ELM) httpPost(url string, body []byte) error {
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -297,14 +297,14 @@ func (this *ELM) httpPost(url string, body []byte, response interface{}) error {
 	if httpResp.StatusCode != http.StatusOK {
 		return errors.New(fmt.Sprintf("http.Status: %s", httpResp.Status))
 	}
-	err = json.NewDecoder(httpResp.Body).Decode(response)
+	err = json.NewDecoder(httpResp.Body).Decode(this)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (this *ELM) httpGet(url string, response interface{}) error {
+func (this *ELM) httpGet(url string) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -320,7 +320,7 @@ func (this *ELM) httpGet(url string, response interface{}) error {
 	if httpResp.StatusCode != http.StatusOK {
 		return errors.New(fmt.Sprintf("http.Status: %s", httpResp.Status))
 	}
-	err = json.NewDecoder(httpResp.Body).Decode(response)
+	err = json.NewDecoder(httpResp.Body).Decode(this)
 	if err != nil {
 		return err
 	}

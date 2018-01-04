@@ -31,6 +31,7 @@ type OrderItem struct {
 
 type CreateOrder struct {
 	PartnerOrderCode   string         `json:"partner_order_code"`
+	ChainStoreCode     string         `json:"chain_store_code"`
 	NotifyUrl          string         `json:"notify_url"`
 	OrderType          int64          `json:"order_type"`
 	TransportInfo      *TransportInfo `json:"transport_info"`

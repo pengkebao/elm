@@ -13,6 +13,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pengkebao/elm/cache"
 )
 
 var appId string
@@ -25,7 +27,13 @@ func init() {
 	appId = "1a1b0136-a003-40e8-805d-6a5f53e29a1c"
 	secretKey = "eb9dfe98-68a1-4204-806f-a3d69434daa6"
 	apiUrl = "https://exam-anubis.ele.me"
+	opts := &cache.RedisOpts{
+		Host: "127.0.0.1:6379",
+	}
+	DB = cache.NewRedis(opts)
 }
+
+var DB *cache.Redis
 
 type ELM struct {
 	Code string      `json:"code"`
@@ -37,12 +45,7 @@ func NewElm() *ELM {
 	return &ELM{}
 }
 
-var token struct {
-	AccessToken string
-	ExpireTime  int64
-}
-
-func (this *ELM) Init(appid string, secretkey string, exam bool) {
+func (this *ELM) Init(appid string, secretkey string, exam bool, redisHost string) {
 	if exam == false {
 		apiUrl = "https://open-anubis.ele.me"
 	}
@@ -54,11 +57,20 @@ func (this *ELM) Init(appid string, secretkey string, exam bool) {
 	}
 	appId = appid
 	secretKey = secretkey
+	opts := &cache.RedisOpts{
+		Host: redisHost,
+	}
+	DB = cache.NewRedis(opts)
 }
 
 func (this *ELM) getAccessToken() (string, error) {
-	if token.ExpireTime > time.Now().Unix() {
-		return token.AccessToken, nil
+	if elmExpirTime, ok := DB.Get("ElmExpirTime").(float64); ok {
+		ElmExpirTime := int64(elmExpirTime)
+		if ElmExpirTime > time.Now().Unix() {
+			if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
+				return elmAccessToken, nil
+			}
+		}
 	}
 	data := make(map[string]interface{})
 	data["app_id"] = appId
@@ -81,8 +93,9 @@ func (this *ELM) getAccessToken() (string, error) {
 			if !ok {
 				return "", errors.New("It's not ok for type float64")
 			}
-			token.AccessToken = fmt.Sprintf("%s", access_token)
-			token.ExpireTime = int64(expire_time) / 1000
+			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
+			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
+			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
 			return fmt.Sprintf("%v", access_token), nil
 		}
 		return "", nil
@@ -196,7 +209,7 @@ func (this *ELM) createRequestUrl(hostUrl string, params map[string]interface{})
 
 func (this *ELM) verifSign(notifyInfo *Notify) (err error) {
 	data := make(map[string]interface{})
-	data["app_id"] = notifyInfo.AppId
+	data["app_id"] = appId
 	notifyData, err := url.QueryUnescape(notifyInfo.Data)
 	if err != nil {
 		return err

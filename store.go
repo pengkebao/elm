@@ -72,7 +72,7 @@ type QueryStoreRes struct {
 	Longitude      string `json:"longitude"`
 	PositionSource int    `json:"position_source"`
 	City           string `json:"city"`
-	ContactPhone   int    `json:"contact_phone"`
+	ContactPhone   string `json:"contact_phone"`
 	ServiceCode    int    `json:"service_code"`
 	Status         int    `json:"status"`
 }

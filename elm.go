@@ -93,7 +93,7 @@ func (this *ELM) getAccessToken() (string, error) {
 			if !ok {
 				return "", errors.New("It's not ok for type float64")
 			}
-			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
+			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix() - 1800
 			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
 			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
 			return fmt.Sprintf("%v", access_token), nil

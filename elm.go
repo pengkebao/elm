@@ -64,14 +64,33 @@ func (this *ELM) Init(appid string, secretkey string, exam bool, redisHost strin
 }
 
 func (this *ELM) getAccessToken() (string, error) {
+	if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
+		return elmOldAccessToken, nil
+	}
 	if elmExpirTime, ok := DB.Get("ElmExpirTime").(float64); ok {
 		ElmExpirTime := int64(elmExpirTime)
-		if ElmExpirTime > time.Now().Unix() {
+		if ElmExpirTime > time.Now().Unix()+300 {
 			if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
 				return elmAccessToken, nil
 			}
+		} else {
+			return this.accessToken()
 		}
 	}
+	return this.accessToken()
+}
+
+func (this *ELM) createStore(info *CreateStore) (err error) {
+	hostUrl := apiUrl + "/anubis-webapi/v2/chain_store"
+	orderInfo, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+	err = this.Send(hostUrl, orderInfo)
+	return err
+}
+
+func (this *ELM) accessToken() (string, error) {
 	data := make(map[string]interface{})
 	data["app_id"] = appId
 	data["salt"] = this.creatSalt()
@@ -93,24 +112,20 @@ func (this *ELM) getAccessToken() (string, error) {
 			if !ok {
 				return "", errors.New("It's not ok for type float64")
 			}
-			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix() - 1800
+			if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
+				DB.Set("ElmOldAccessToken", elmAccessToken, time.Second*599)
+			}
+			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
 			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
 			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
+			if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
+				return elmOldAccessToken, nil
+			}
 			return fmt.Sprintf("%v", access_token), nil
 		}
 		return "", nil
 	}
 	return "", errors.New(this.Msg)
-}
-
-func (this *ELM) createStore(info *CreateStore) (err error) {
-	hostUrl := apiUrl + "/anubis-webapi/v2/chain_store"
-	orderInfo, err := json.Marshal(info)
-	if err != nil {
-		return err
-	}
-	err = this.Send(hostUrl, orderInfo)
-	return err
 }
 
 func (this *ELM) queryStore(info *QueryStore) (err error) {

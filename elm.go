@@ -72,9 +72,9 @@ func (this *ELM) Init(appid string, secretkey string, exam bool, redisHost strin
 }
 
 func (this *ELM) getAccessToken() (string, error) {
-	// if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
-	// 	return elmOldAccessToken, nil
-	// }
+	if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
+		return elmOldAccessToken, nil
+	}
 	if elmExpirTime, ok := DB.Get("ElmExpirTime").(float64); ok {
 		ElmExpirTime := int64(elmExpirTime)
 		if ElmExpirTime > (time.Now().Unix() + 600) {
@@ -99,9 +99,9 @@ func (this *ELM) createStore(info *CreateStore) (err error) {
 }
 
 func (this *ELM) refreshAccessToken() {
-	// if _, ok := DB.Get("ElmOldAccessToken").(string); ok {
-	// 	return
-	// }
+	if _, ok := DB.Get("ElmOldAccessToken").(string); ok {
+		return
+	}
 	data := make(map[string]interface{})
 	data["app_id"] = appId
 	data["salt"] = this.creatSalt()
@@ -123,9 +123,9 @@ func (this *ELM) refreshAccessToken() {
 			if !ok {
 				return
 			}
-			// if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
-			// 	DB.Set("ElmOldAccessToken", elmAccessToken, time.Second*600)
-			// }
+			if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
+				DB.Set("ElmOldAccessToken", elmAccessToken, time.Second*600)
+			}
 			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
 			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
 			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
@@ -136,9 +136,9 @@ func (this *ELM) refreshAccessToken() {
 
 func (this *ELM) accessToken() (string, error) {
 	this.refreshAccessToken()
-	// if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
-	// 	return elmOldAccessToken, nil
-	// }
+	if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
+		return elmOldAccessToken, nil
+	}
 	if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
 		return elmAccessToken, nil
 	}

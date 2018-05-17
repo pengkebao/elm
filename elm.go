@@ -65,27 +65,18 @@ func (this *ELM) Init(appid string, secretkey string, exam bool, redisHost strin
 	//加入任务
 	if elmExpirTime, ok := DB.Get("ElmExpirTime").(float64); ok {
 		ElmExpirTime := int64(elmExpirTime)
-		if ElmExpirTime > (time.Now().Unix() + 600) {
-			time.AfterFunc(time.Second*time.Duration(ElmExpirTime-time.Now().Unix()-600), this.refreshAccessToken)
+		if ElmExpirTime > (time.Now().Unix() - 60) {
+			time.AfterFunc(time.Second*time.Duration(ElmExpirTime-time.Now().Unix()-60), this.refreshAccessToken)
 		}
 	}
 }
 
 func (this *ELM) getAccessToken() (string, error) {
-	if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
-		return elmOldAccessToken, nil
+	this.refreshAccessToken()
+	if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
+		return elmAccessToken, nil
 	}
-	if elmExpirTime, ok := DB.Get("ElmExpirTime").(float64); ok {
-		ElmExpirTime := int64(elmExpirTime)
-		if ElmExpirTime > (time.Now().Unix() + 600) {
-			if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
-				return elmAccessToken, nil
-			}
-		} else {
-			return this.accessToken()
-		}
-	}
-	return this.accessToken()
+	return "", errors.New("获取token出错")
 }
 
 func (this *ELM) createStore(info *CreateStore) (err error) {
@@ -99,7 +90,7 @@ func (this *ELM) createStore(info *CreateStore) (err error) {
 }
 
 func (this *ELM) refreshAccessToken() {
-	if _, ok := DB.Get("ElmOldAccessToken").(string); ok {
+	if _, ok := DB.Get("ElmAccessToken").(string); ok {
 		return
 	}
 	data := make(map[string]interface{})
@@ -123,22 +114,16 @@ func (this *ELM) refreshAccessToken() {
 			if !ok {
 				return
 			}
-			if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
-				DB.Set("ElmOldAccessToken", elmAccessToken, time.Second*600)
-			}
-			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
+			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix() - 600
 			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
 			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
-			time.AfterFunc(time.Second*time.Duration(dbExpire_time-600), this.refreshAccessToken)
+			time.AfterFunc(time.Second*time.Duration(dbExpire_time-60), this.refreshAccessToken)
 		}
 	}
 }
 
 func (this *ELM) accessToken() (string, error) {
 	this.refreshAccessToken()
-	if elmOldAccessToken, ok := DB.Get("ElmOldAccessToken").(string); ok {
-		return elmOldAccessToken, nil
-	}
 	if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
 		return elmAccessToken, nil
 	}

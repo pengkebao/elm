@@ -90,8 +90,11 @@ func (this *ELM) createStore(info *CreateStore) (err error) {
 }
 
 func (this *ELM) refreshAccessToken() {
-	if _, ok := DB.Get("ElmAccessToken").(string); ok {
-		return
+	if elmExpirTime, ok := DB.Get("ElmExpirTime").(float64); ok {
+		ElmExpirTime := int64(elmExpirTime)
+		if (ElmExpirTime - time.Now().Unix()) > 60 {
+			return
+		}
 	}
 	data := make(map[string]interface{})
 	data["app_id"] = appId
@@ -114,7 +117,7 @@ func (this *ELM) refreshAccessToken() {
 			if !ok {
 				return
 			}
-			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix() - 600
+			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
 			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
 			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
 			time.AfterFunc(time.Second*time.Duration(dbExpire_time-60), this.refreshAccessToken)

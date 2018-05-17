@@ -152,14 +152,6 @@ func (this *ELM) refreshAccessToken() {
 	}
 }
 
-func (this *ELM) accessToken() (string, error) {
-	this.refreshAccessToken(1)
-	if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
-		return elmAccessToken, nil
-	}
-	return "", errors.New("获取token失败")
-}
-
 func (this *ELM) queryStore(info *QueryStore) (err error) {
 	hostUrl := apiUrl + "/anubis-webapi/v2/chain_store/query"
 	orderInfo, err := json.Marshal(info)

@@ -72,9 +72,36 @@ func (this *ELM) Init(appid string, secretkey string, exam bool, redisHost strin
 }
 
 func (this *ELM) getAccessToken() (string, error) {
-	this.refreshAccessToken()
 	if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
 		return elmAccessToken, nil
+	}
+	data := make(map[string]interface{})
+	data["app_id"] = appId
+	data["salt"] = this.creatSalt()
+	data["signature"] = this.creatAccessTokenSign(data)
+	hostUrl := apiUrl + "/anubis-webapi/get_access_token"
+	hostUrl = this.createRequestUrl(hostUrl, data)
+	err := this.httpGet(hostUrl)
+	if err != nil {
+		return "", err
+	}
+	if this.Code == "200" {
+		res := make(map[string]interface{})
+		v, ok := this.Data.(map[string]interface{})
+		if ok {
+			res = v
+		}
+		if access_token, ok := res["access_token"]; ok {
+			expire_time, ok := res["expire_time"].(float64)
+			if !ok {
+				return "", errors.New("expire_time 断言失败")
+			}
+			dbExpire_time := int64(expire_time)/1000 - time.Now().Unix()
+			DB.Set("ElmAccessToken", fmt.Sprintf("%s", access_token), time.Second*time.Duration(dbExpire_time))
+			DB.Set("ElmExpirTime", int64(expire_time)/1000, time.Second*time.Duration(dbExpire_time))
+			time.AfterFunc(time.Second*time.Duration(dbExpire_time-60), this.refreshAccessToken)
+			return fmt.Sprintf("%s", access_token), nil
+		}
 	}
 	return "", errors.New("获取token出错")
 }
@@ -126,7 +153,7 @@ func (this *ELM) refreshAccessToken() {
 }
 
 func (this *ELM) accessToken() (string, error) {
-	this.refreshAccessToken()
+	this.refreshAccessToken(1)
 	if elmAccessToken, ok := DB.Get("ElmAccessToken").(string); ok {
 		return elmAccessToken, nil
 	}

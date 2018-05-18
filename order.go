@@ -46,6 +46,7 @@ type CreateOrder struct {
 	ReceiverInfo       *ReceiverInfo  `json:"receiver_info"`
 	OrderItems         []*OrderItem   `json:"items_json"`
 	OrderWeight        string         `json:"order_weight"`
+	SerialNumber       string         `json:"serial_number"`
 }
 
 func NewCreateOrder() *CreateOrder {

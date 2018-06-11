@@ -132,7 +132,7 @@ type QueryOrderRes struct {
 	CarrierDriverName          string            `json:"carrier_driver_name"`
 	CarrierDriverPhone         string            `json:"carrier_driver_phone"`
 	EstimateArriveTime         int64             `json:"estimate_arrive_time"`
-	OrderTotalDeliveryCost     int               `json:"order_total_delivery_cost"`
+	OrderTotalDeliveryCost     string            `json:"order_total_delivery_cost"`
 	OrderTotalDeliveryDiscount int               `json:"order_total_delivery_discount"`
 	OrderStatus                int               `json:"order_status"`
 	AbnormalCode               string            `json:"abnormal_code"`
